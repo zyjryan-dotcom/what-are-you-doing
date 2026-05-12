@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Atlas 中文课：你在做什么？</title>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <style>
+        :root { --p: #4caf50; --bg: #f4f7f6; --txt: #2c3e50; }
+        body { margin: 0; background: var(--bg); font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        
+        #start-mask { position: fixed; inset: 0; background: var(--p); z-index: 1000; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; text-align: center; }
+        
+        .card { background: white; border-radius: 30px; box-shadow: 0 12px 30px rgba(0,0,0,0.1); width: 100%; max-width: 450px; padding: 30px; text-align: center; margin-top: 10px; border-bottom: 8px solid var(--p); }
+        .emoji-box { font-size: 90px; margin-bottom: 15px; height: 120px; display: flex; align-items: center; justify-content: center; }
+        .q-zh { font-family: 'Ma Shan Zheng', cursive; font-size: 2.6rem; margin: 5px 0; color: var(--txt); }
+        .q-en { color: #7f8c8d; font-size: 1.1rem; margin-bottom: 25px; font-weight: bold; }
+        
+        .ans-list { display: flex; flex-direction: column; gap: 12px; }
+        .ans-btn { background: #f8fdf9; border: 2px solid #e8f5e9; padding: 18px; border-radius: 18px; font-size: 1.6rem; font-family: 'Ma Shan Zheng', cursive; cursor: pointer; transition: 0.2s; color: var(--txt); }
+        .ans-btn:active { transform: scale(0.96); background: #c8e6c9; }
+        .ans-btn.selected { background: var(--p); color: white; border-color: #388e3c; }
+
+        .nav { margin-top: 25px; display: flex; gap: 15px; }
+        .n-btn { padding: 12px 30px; border-radius: 50px; border: none; background: #34495e; color: white; font-weight: bold; cursor: pointer; }
+        .prog { color: var(--p); font-weight: bold; margin-bottom: 10px; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <div id="start-mask" onclick="startApp()">
+        <span style="font-size: 5rem;">🏃‍♂️</span>
+        <h1>你在做什么？</h1>
+        <p>What are you doing?<br>点击开始练习</p>
+    </div>
+
+    <div class="prog" id="count">1 / 10</div>
+
+    <div class="card">
+        <div class="emoji-box" id="pic">🍌</div>
+        <div class="q-zh">你在做什么？</div>
+        <div class="q-en">What are you doing?</div>
+        <div class="ans-list" id="options"></div>
+    </div>
+
+    <div class="nav">
+        <button class="n-btn" onclick="change(-1)">上一个</button>
+        <button class="n-btn" style="background:#2ecc71" onclick="change(1)">下一个</button>
+    </div>
+
+    <script>
+        // 基于图片 Screenshot 2026-05-12 at 12.19.01.png 和 12.19.15.png 的数据
+        const data = [
+            { a: ["我在吃香蕉", "我在吃苹果"], im: "🍌" }, //
+            { a: ["我在喝水", "我在喝牛奶"], im: "🥛" }, //
+            { a: ["我在读书", "我在写字"], im: "📖" }, //
+            { a: ["我在走路", "我在跑步"], im: "🚶‍♂️" }, //
+            { a: ["我在洗手", "我在洗澡"], im: "🧼" }, //
+            { a: ["我在洗澡", "我在洗脸"], im: "🚿" }, //
+            { a: ["我在睡觉", "我在起床"], im: "😴" }, //
+            { a: ["我在洗衣服", "我在折衣服"], im: "🧺" }, //
+            { a: ["我在穿衣服", "我在脱衣服"], im: "👕" }, //
+            { a: ["我在玩", "我在跳舞"], im: "🧸" } //
+        ];
+
+        let cur = 0;
+        const s = window.speechSynthesis;
+
+        function startApp() {
+            s.speak(new SpeechSynthesisUtterance(""));
+            document.getElementById('start-mask').style.display = 'none';
+            render();
+        }
+
+        function render() {
+            const item = data[cur];
+            document.getElementById('count').textContent = `${cur + 1} / ${data.length}`;
+            document.getElementById('pic').textContent = item.im;
+            
+            const list = document.getElementById('options');
+            list.innerHTML = '';
+            item.a.forEach(text => {
+                const btn = document.createElement('button');
+                btn.className = 'ans-btn';
+                btn.textContent = text;
+                btn.onclick = () => {
+                    document.querySelectorAll('.ans-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    speak(text);
+                };
+                list.appendChild(btn);
+            });
+            speak("你在做什么？");
+        }
+
+        function speak(t) {
+            s.cancel();
+            const m = new SpeechSynthesisUtterance(t);
+            m.lang = 'zh-CN';
+            m.rate = 0.85;
+            s.speak(m);
+        }
+
+        function change(d) {
+            cur = (cur + d + data.length) % data.length;
+            render();
+        }
+
+        window.speechSynthesis.onvoiceschanged = () => s.getVoices();
+    </script>
+</body>
+</html>
